@@ -91,3 +91,16 @@ Fedora/RPM Fusion, akmod-nvidia-580xx) if this applies to you.
   against them rather than through systemd.
 - Volume mount directories must exist on the host before the container
   starts — Podman won't create them automatically.
+
+## If GPU passthrough doesn't work
+
+This still runs fine without it. If nvidia-smi fails, the toolkit
+isn't installed, or AddDevice=nvidia.com/gpu=all can't be satisfied
+for any reason, Ollama falls back to CPU inference automatically —
+no changes needed to the Quadlet. It'll just be slower, particularly
+for larger models. Worth confirming the base setup works on CPU first
+before troubleshooting GPU passthrough specifically.
+
+To run CPU-only deliberately rather than troubleshooting GPU
+passthrough, remove the AddDevice=nvidia.com/gpu=all line from
+ollama.container before copying it into place.
