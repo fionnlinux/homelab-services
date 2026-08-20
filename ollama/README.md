@@ -23,6 +23,11 @@ on the home network.
 
 ## Setup
 
+Clone the repo and move into this service's folder:
+
+    git clone https://github.com/fionnlinux/homelab-services.git
+    cd homelab-services/ollama
+
 Confirm the NVIDIA driver is installed and working first:
 
     nvidia-smi
