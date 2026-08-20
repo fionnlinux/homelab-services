@@ -26,13 +26,47 @@ deliberate change, not a default.
 
 ## Setup
 
+Fedora's systemd-resolved occupies port 53 by default, which conflicts
+with AdGuard Home binding the same port. Disable its stub listener
+first:
+
+    sudo mkdir -p /etc/systemd/resolved.conf.d
+    sudo tee /etc/systemd/resolved.conf.d/adguardhome.conf << 'RESOLVED'
+    [Resolve]
+    DNS=127.0.0.1
+    DNSStubListener=no
+    RESOLVED
+    sudo mv /etc/resolv.conf /etc/resolv.conf.backup
+    sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+    sudo systemctl reload-or-restart systemd-resolved
+
+Rootless Podman can't bind to port 53 by default either (see
+"Privileged port binding" below) — allow it:
+
+    sudo sysctl -w net.ipv4.ip_unprivileged_port_start=53
+    echo "net.ipv4.ip_unprivileged_port_start=53" | sudo tee /etc/sysctl.d/99-rootless-ports.conf
+
+Then set up the Quadlet itself:
+
     mkdir -p ~/.config/containers/systemd
     cp adguardhome.container ~/.config/containers/systemd/
     mkdir -p ~/.adguardhome/work ~/.adguardhome/conf
     systemctl --user daemon-reload
     systemctl --user enable --now adguardhome.service
 
-Then complete setup at http://localhost:3000
+Complete setup at http://localhost:3000, then point your system's DNS
+at 127.0.0.1:
+
+    nmcli connection show
+    nmcli connection modify "<connection-name>" ipv4.dns "127.0.0.1"
+    nmcli connection modify "<connection-name>" ipv4.ignore-auto-dns yes
+    nmcli connection up "<connection-name>"
+
+Verify with:
+
+    dig google.com
+
+and check the query log at http://localhost:3000.
 
 ## What I learned
 
