@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollama Local LLM Server
+After=network.target
+
+[Container]
+Image=docker.io/ollama/ollama:latest
+Volume=%h/.ollama:/root/.ollama:Z
+PublishPort=127.0.0.1:11434:11434
+AddDevice=nvidia.com/gpu=all
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=AdGuard Home
+After=network.target
+
+[Container]
+Image=docker.io/adguard/adguardhome:latest
+Volume=%h/.adguardhome/work:/opt/adguardhome/work:Z
+Volume=%h/.adguardhome/conf:/opt/adguardhome/conf:Z
+PublishPort=127.0.0.1:53:53/tcp
+PublishPort=127.0.0.1:53:53/udp
+PublishPort=127.0.0.1:3000:3000
+AddCapability=NET_BIND_SERVICE
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
