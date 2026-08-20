@@ -23,11 +23,44 @@ on the home network.
 
 ## Setup
 
+Confirm the NVIDIA driver is installed and working first:
+
+    nvidia-smi
+
+If this fails, see "GPU passthrough" below before continuing.
+
+Install the NVIDIA Container Toolkit:
+
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+    sudo dnf install nvidia-container-toolkit
+
+Generate the CDI spec so Podman knows how to expose the GPU to
+containers:
+
+    sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+    nvidia-ctk cdi list
+
+Confirm your GPU is listed in the output above, then enable the
+SELinux boolean that allows containers to access host devices:
+
+    sudo setsebool -P container_use_devices on
+
+Now set up the Quadlet itself:
+
     mkdir -p ~/.config/containers/systemd
     cp ollama.container ~/.config/containers/systemd/
     mkdir -p ~/.ollama
     systemctl --user daemon-reload
     systemctl --user enable --now ollama.service
+    systemctl --user status ollama.service
+
+Confirm it shows active (running), then pull a model to test:
+
+    podman exec -it systemd-ollama ollama pull phi4-mini
+    podman exec -it systemd-ollama ollama run phi4-mini "hello"
+
+Watch nvidia-smi in another terminal while it responds — GPU memory
+and utilisation should rise if passthrough is working correctly.
 
 ## GPU passthrough
 
@@ -35,17 +68,16 @@ This Quadlet passes through the host GPU via CDI
 (AddDevice=nvidia.com/gpu=all), letting Ollama run inference on the
 GPU instead of falling back entirely to CPU.
 
-Requirements on the host:
+Requires a working NVIDIA driver on the host first (confirm with
+nvidia-smi) — installation varies significantly by GPU generation and
+distro, see your distro's NVIDIA/RPM Fusion documentation.
 
-- NVIDIA driver installed and working (nvidia-smi succeeds)
-- nvidia-container-toolkit installed
-- CDI spec generated: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
-- SELinux boolean enabled: sudo setsebool -P container_use_devices on
-
-Note: for GPUs below a certain generation, the mainline driver's "open"
-kernel module may not support the hardware — check lspci -k to confirm
-which driver is actually bound, and use the correct legacy driver
-branch if needed for older cards.
+One non-obvious gotcha worth knowing: for older GPUs (Pascal
+generation and earlier), the current default "open" NVIDIA kernel
+module doesn't support the hardware — the driver installs but
+nvidia-smi fails with a GSP-related error. Check lspci -k to confirm
+which driver is bound, and use the correct legacy driver branch (on
+Fedora/RPM Fusion, akmod-nvidia-580xx) if this applies to you.
 
 ## What I learned
 
