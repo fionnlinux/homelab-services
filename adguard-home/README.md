@@ -26,6 +26,11 @@ deliberate change, not a default.
 
 ## Setup
 
+Clone the repo and move into this service's folder:
+
+    git clone https://github.com/fionnlinux/homelab-services.git
+    cd homelab-services/adguard-home
+
 Fedora's systemd-resolved occupies port 53 by default, which conflicts
 with AdGuard Home binding the same port. Disable its stub listener
 first:
